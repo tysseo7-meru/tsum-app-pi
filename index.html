@@ -5,74 +5,757 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>つむP</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;800&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
   body {
     font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", sans-serif;
-    background: linear-gradient(180deg, #ffd9e8 0%, #ffeef6 55%, #d9f2ff 100%);
-    color: #4a2436; display: flex; flex-direction: column; align-items: center;
+    background: linear-gradient(180deg, #bfe6ff 0%, #e6f6ff 55%, #cfe4ff 100%);
+    color: #26455a; display: flex; flex-direction: column; align-items: center;
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+    user-select: none; -webkit-user-select: none;
   }
-  #verTag { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 5;
-            font-size: 11px; color: rgba(74,36,54,.55); }
-  .screen { flex: 1; width: 100%; max-width: 480px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; gap: 16px; padding: 20px; text-align: center; }
-  .icon { width: 148px; height: 148px; border-radius: 32px; box-shadow: 0 8px 24px rgba(190,60,120,.25); }
-  h1 { font-size: 40px; font-weight: 800; letter-spacing: .04em; color: #e75480;
-       text-shadow: 0 2px 0 #fff; }
-  .sub { font-size: 15px; color: #7a4a5e; }
-  #board { width: min(86vw, 360px); aspect-ratio: 1; border-radius: 20px;
-           background: rgba(255,255,255,.55); border: 3px solid rgba(231,84,128,.35);
-           display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr);
-           padding: 10px; gap: 4px; }
-  #board span { border-radius: 50%; opacity: .5; }
-  .btn { font: inherit; font-weight: 700; font-size: 18px; color: #fff; background: #e75480;
-         border: none; border-radius: 999px; padding: 13px 42px; cursor: pointer;
-         box-shadow: 0 4px 0 #b93a63; }
-  .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #b93a63; }
-  .btn:disabled { background: #c9a3b2; box-shadow: 0 4px 0 #a37e8d; cursor: default; }
-  .note { font-size: 13px; color: #96677c; }
-  #userLine { font-size: 14px; color: #7a4a5e; min-height: 1.2em; }
-  #pi-gate { position: fixed; inset: 0; z-index: 50; background: rgba(60,16,36,.92); color: #fff;
-             display: none; flex-direction: column; align-items: center; justify-content: center;
-             gap: 16px; padding: 24px; text-align: center; }
-  #pi-gate a { color: #ffd9e8; font-weight: 700; }
+  #verTag { position: fixed; bottom: 6px; left: 50%; transform: translateX(-50%); z-index: 5;
+            font-size: 11px; color: rgba(38,69,90,.55); }
+  .screen { flex: 1; width: 100%; max-width: 480px; display: none; flex-direction: column;
+            align-items: center; justify-content: center; gap: 14px; padding: 16px; text-align: center; }
+  .screen.on { display: flex; }
+  .icon { width: 132px; height: 132px; border-radius: 30px; box-shadow: 0 8px 24px rgba(40,110,180,.28); }
+  h1 { font-size: 40px; font-weight: 800; letter-spacing: .04em; color: #1b83d1; text-shadow: 0 2px 0 #fff; }
+  .sub { font-size: 15px; color: #4d6d82; }
+  .panel { background: rgba(255,255,255,.65); border: 2px solid rgba(30,136,229,.30); border-radius: 16px;
+           padding: 10px 18px; display: flex; flex-direction: column; gap: 6px; width: 100%; max-width: 340px; }
+  .prow { display: flex; justify-content: space-between; align-items: center; font-size: 16px; font-weight: 700; }
+  .prow .val { color: #1b83d1; font-size: 18px; }
+  #hearts { font-size: 19px; letter-spacing: 2px; color: #ef5350; }
+  #heartInfo { font-size: 12px; color: #5d7f95; font-weight: 400; }
+  .btn { font: inherit; font-weight: 800; font-size: 19px; color: #fff; background: #1e88e5;
+         border: none; border-radius: 999px; padding: 13px 44px; cursor: pointer;
+         box-shadow: 0 4px 0 #155f9e; }
+  .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #155f9e; }
+  .btn:disabled { background: #a9c3d4; box-shadow: 0 4px 0 #8299a8; cursor: default; }
+  .btn.sub2 { background: #fff; color: #1e88e5; box-shadow: 0 4px 0 #b9d2e2; font-size: 16px; padding: 10px 30px; }
+  .note { font-size: 13px; color: #5d7f95; }
+  #userLine { font-size: 14px; color: #4d6d82; min-height: 1.2em; }
+  /* game screen */
+  #gameScreen { justify-content: flex-start; gap: 8px; padding-top: 10px; }
+  #hud { width: min(94vw, 430px); display: flex; flex-direction: column; gap: 4px; }
+  #hudRow { display: flex; justify-content: space-between; align-items: baseline; font-weight: 800; }
+  #scoreBox { font-size: 19px; color: #fff; background: linear-gradient(180deg, #4658d8, #1c2a7a);
+              border: 2px solid #9fd8ff; border-radius: 999px; padding: 4px 16px; min-width: 104px; text-align: center;
+              box-shadow: inset 0 2px 3px rgba(255,255,255,.45); }
+  #coinBox { font-size: 16px !important; color: #fff !important; background: linear-gradient(180deg, #4658d8, #1c2a7a);
+             border: 2px solid #9fd8ff; border-radius: 999px; padding: 5px 14px; min-width: 92px; text-align: center;
+             box-shadow: inset 0 2px 3px rgba(255,255,255,.45); }
+  #pauseBtn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #ffb300; cursor: pointer;
+              background: linear-gradient(180deg, #ffd54f, #ff8f00); font-size: 17px; color: #5d3a00; flex: none; }
+  #underRow { width: min(94vw, 430px); display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .roundBtn { width: 66px; height: 66px; border-radius: 50%; border: 3px solid #fff; cursor: pointer; position: relative;
+              display: flex; align-items: center; justify-content: center; padding: 0; }
+  .roundBtn:disabled { filter: grayscale(.5) brightness(.75); cursor: default; }
+  #skillBtn { background: conic-gradient(#ffd93b 0deg, #ffd93b 0deg, #fff8e1 0deg); box-shadow: 0 3px 8px rgba(0,0,0,.3); }
+  #skillBtn.ready { animation: pulse .7s ease-in-out infinite alternate; border-color: #ffb300; }
+  @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
+  #skillBtn .in { width: 52px; height: 52px; border-radius: 50%; background: #fff8e1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #skillBtn .in svg { width: 88%; height: 88%; }
+  #fanBtn { background: linear-gradient(180deg, #ffb74d, #f57c00); box-shadow: 0 3px 8px rgba(0,0,0,.3); }
+  #fanBtn .cnt { position: absolute; bottom: -4px; right: -4px; background: #e75480; color: #fff; font-size: 12px; font-weight: 800;
+                 border-radius: 999px; padding: 1px 7px; border: 2px solid #fff; }
+  .btnLabel { font-size: 11px; color: #cfc4f5; text-align: center; margin-top: 3px; font-weight: 700; }
+  #dragHand { position: absolute; z-index: 9; width: 92px; height: 92px; pointer-events: none; display: none;
+              filter: drop-shadow(0 3px 4px rgba(0,0,0,.35)); }
+  #pauseOverlay { position: absolute; inset: 0; z-index: 8; display: none; align-items: center; justify-content: center;
+                  background: rgba(20,10,50,.55); color: #fff; font-size: 24px; font-weight: 800; border-radius: 38px; }
+  #pauseOverlay.on { display: flex; }
+  #comboBox { font-size: 15px; color: #f39c12; font-weight: 800; min-height: 1.1em; }
+  #coinBox { font-size: 19px; color: #b8860b; }
+  #timeSec { background: #fff; border: 3px solid #7ec8f7; color: #1c6ea4; border-radius: 50%;
+             width: 46px; height: 46px; display: flex; align-items: center; justify-content: center;
+             font-size: 19px; box-shadow: 0 2px 6px rgba(60,120,180,.25); }
+  #feverRow { display: flex; align-items: center; gap: 8px; }
+  #feverLabel { font-size: 12px; font-weight: 800; color: #c2185b; letter-spacing: .08em; }
+  #feverWrap { flex: 1; height: 10px; border-radius: 999px; background: rgba(255,255,255,.7);
+               border: 2px solid rgba(194,24,91,.3); overflow: hidden; }
+  #feverBar { height: 100%; width: 0%; background: linear-gradient(90deg, #ffb3c8, #e75480); }
+  #feverBar.hot { background: linear-gradient(90deg, #ffd54f, #ff7043); }
+  #field.fever { border-color: #ffb300; box-shadow: 0 0 22px 4px rgba(255,179,0,.65); }
+  #timeBarWrap { height: 12px; border-radius: 999px; background: rgba(255,255,255,.7);
+                 border: 2px solid rgba(231,84,128,.3); overflow: hidden; }
+  #timeBar { height: 100%; width: 100%; background: linear-gradient(90deg, #ff8aab, #e75480); border-radius: 999px; }
+  #timeBar.low { background: linear-gradient(90deg, #ff7043, #e53935); }
+  #timeSec { font-size: 15px; color: #7a4a5e; }
+  #fieldWrap { position: relative; width: min(94vw, 430px); }
+  #field { position: relative; width: 100%; border-radius: 38px; touch-action: none;
+           background: rgba(255,255,255,.5); border: 3px solid rgba(231,84,128,.3); overflow: hidden; }
+  body.inGame { background: linear-gradient(180deg, #160b38 0%, #3b1d6e 55%, #131a4d 100%); }
+  body.inGame::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,.95) 1.2px, transparent 1.8px),
+      radial-gradient(circle, rgba(170,220,255,.8) 1px, transparent 1.6px),
+      radial-gradient(circle, rgba(255,190,230,.75) 1.4px, transparent 2px);
+    background-size: 130px 130px, 90px 90px, 170px 170px;
+    background-position: 0 0, 33px 51px, 71px 19px; }
+  body.inGame .screen { position: relative; z-index: 1; }
+  body.inGame #field { background: rgba(38,20,90,.45); border: 3px solid #b388ff;
+    box-shadow: 0 0 18px 3px rgba(150,90,255,.55), inset 0 0 24px rgba(120,70,255,.35); }
+  body.inGame #field.fever { border-color: #ffb300; box-shadow: 0 0 24px 6px rgba(255,179,0,.7), inset 0 0 24px rgba(255,150,0,.3); }
+  body.inGame #gameScreen .note { color: #cfc4f5; }
+  body.inGame #scoreBox { color: #ff9ec4; }
+  body.inGame #feverLabel { color: #ff9ec4; }
+  .tsum.sel .face { transform: rotate(0deg) !important; }
+  #chainCanvas { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+  .tsum { position: absolute; left: 0; top: 0; z-index: 2; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          transition: transform .18s ease-in; pointer-events: none;
+          box-shadow: inset -3px -5px 0 rgba(0,0,0,.08), 0 2px 3px rgba(120,40,80,.18); }
+  .tsum .face { line-height: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+  .tsum .face svg { width: 100%; height: 100%; transform: scale(1.08); }
+  #bgmBtn { position: fixed; bottom: 12px; right: 12px; z-index: 30; font-size: 20px; width: 44px; height: 44px;
+            border-radius: 50%; border: 2px solid rgba(30,136,229,.35); background: rgba(255,255,255,.85); cursor: pointer; }
+  .tsum.sel { z-index: 4; filter: brightness(1.12); outline: 3px solid #fff; }
+  .tsum.pop { transition: transform .13s ease-in, opacity .13s ease-in; opacity: 0; }
+  .tsum.spawn { animation: spawnIn .18s ease-out; }
+  @keyframes spawnIn { from { transform: scale(.3); opacity: 0; } }
+  .floatScore { position: absolute; z-index: 7; font-weight: 800; color: #e75480; pointer-events: none;
+                text-shadow: 0 1px 0 #fff; animation: floatUp .8s ease-out forwards; font-size: 20px; }
+  @keyframes floatUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-44px); opacity: 0; } }
+  /* result overlay */
+  #result { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center;
+            background: rgba(74,20,44,.45); padding: 20px; }
+  #result.on { display: flex; }
+  #resultCard { background: #fff7fa; border-radius: 24px; padding: 26px 30px; text-align: center;
+                display: flex; flex-direction: column; gap: 10px; align-items: center; max-width: 92vw;
+                box-shadow: 0 12px 32px rgba(120,20,60,.35); }
+  #resultCard h2 { color: #1b83d1; font-size: 26px; font-weight: 800; }
+  #finalScore { font-size: 40px; font-weight: 800; color: #26455a; }
+  #newBest { color: #f39c12; font-weight: 800; display: none; }
 </style>
 </head>
 <body>
-<div class="screen">
-  <img class="icon" src="app-icon-1024.png" alt="">
+<div class="screen on" id="titleScreen">
+  <img class="icon" src="app-icon-1024.png?v=25" alt="">
   <h1>つむP</h1>
   <p class="sub">なぞってつなげて消すパズル</p>
-  <div id="board" aria-hidden="true"></div>
-  <button class="btn" disabled>準備中</button>
+  <div class="panel">
+    <div class="prow"><span>ハート</span><span><span id="hearts">♥♥♥♥♥</span> <span id="heartInfo"></span></span></div>
+    <div class="prow"><span>ベストスコア</span><span class="val" id="bestVal">0</span></div>
+    <div class="prow"><span>コイン</span><span class="val" id="coinVal">0</span></div>
+  </div>
+  <div class="panel" id="giftPanel">
+    <div class="prow"><span>受け取り箱 🎁</span><span class="val" id="inboxVal">―</span></div>
+    <button class="btn sub2" id="claimBtn" style="display:none">ハートを受け取る</button>
+    <div class="prow"><span>ハートを送る</span></div>
+    <div style="display:flex; gap:8px;">
+      <input id="giftTo" type="text" placeholder="相手のPiユーザー名" autocomplete="off" style="flex:1; min-width:0; font:inherit; font-size:16px; padding:9px 12px; border-radius:999px; border:2px solid rgba(30,136,229,.40);">
+      <button class="btn sub2" id="giftBtn" style="padding:9px 18px;">送る</button>
+    </div>
+    <p class="note" id="giftMsg">送るとコイン+200（1日5回まで）</p>
+  </div>
+  <button class="btn" id="startBtn" disabled>スタート</button>
   <p id="userLine"></p>
-  <p class="note">ゲーム本体はこれから作ります。いまは入れ物だけです。</p>
+  <p class="note">同じツムを3つ以上なぞってつなげると消えます。<br>プレイごとにハートを1つ使います（3分で1つ回復）。</p>
 </div>
+
+<div class="screen" id="gameScreen">
+  <div id="hud">
+    <div id="hudRow">
+      <div id="scoreBox">0</div>
+      <div id="timeSec">60</div>
+      <div id="coinBox">🪙 0</div>
+      <button id="pauseBtn">⏸</button>
+    </div>
+    <div id="timeBarWrap"><div id="timeBar"></div></div>
+    <div id="feverRow">
+      <div id="feverLabel">FEVER</div>
+      <div id="feverWrap"><div id="feverBar"></div></div>
+      <div id="comboBox"></div>
+    </div>
+  </div>
+  <div id="fieldWrap"><div id="field"><canvas id="chainCanvas"></canvas><div id="dragHand"><svg viewBox="0 0 100 100"><path d="M51 3 c4.5 0 7.5 3.4 7.5 8.5 V34 c2.8-2.2 5-3.2 7.6-2.6 3.4.8 5 4.4 3.9 8.2 2.9-1.6 6-1.4 8.2.6 2.6 2.4 2.6 6.4.2 9.6 3.2-.4 6.2 1.2 7.4 4.2 1.4 3.4-.2 7.2-2.6 10.6 L70 82.5 c-3.4 4.6-8.4 7-14 7 H48 c-6.5 0-12-2.8-15.6-7.8 L21 66.6 c-2.2-3-2.4-6.8-.4-9.4 1.9-2.5 5.4-3 8.4-1.2 l8.4 5 V11.5 C37.4 6.4 40.4 3 45 3 Z" fill="#ffffff" stroke="#2f2a33" stroke-width="3.5" stroke-linejoin="round"/><path d="M37.5 40 q4 3 8.5 3 M58.5 40 q4 3 8 2.4" stroke="#2f2a33" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".55"/></svg></div><div id="pauseOverlay">⏸ 一時停止中</div></div></div>
+  <div id="underRow">
+    <div><button class="roundBtn" id="skillBtn"><span class="in" id="skillIn"></span></button><div class="btnLabel">スキル</div></div>
+    <p class="note">ゆびでなぞって、<br>はなすと消えます</p>
+    <div><button class="roundBtn" id="fanBtn"><svg viewBox="0 0 100 100" width="40" height="40"><g fill="#fff"><path d="M50 50 L50 12 A38 38 0 0 1 74 24 Z"/><path d="M50 50 L88 50 A38 38 0 0 1 76 74 Z"/><path d="M50 50 L50 88 A38 38 0 0 1 26 76 Z"/><path d="M50 50 L12 50 A38 38 0 0 1 24 26 Z"/></g><circle cx="50" cy="50" r="8" fill="#f57c00"/></svg><span class="cnt" id="fanCnt">3</span></button><div class="btnLabel">シャッフル</div></div>
+  </div>
+</div>
+
+<div id="result">
+  <div id="resultCard">
+    <h2>おつかれさま！</h2>
+    <div id="finalScore">0</div>
+    <div id="newBest">★ ベストスコア更新！</div>
+    <div class="prow" style="gap:24px"><span>コイン +<span id="coinGain">0</span></span><span>ベスト <span id="bestVal2">0</span></span></div>
+    <button class="btn" id="againBtn">もう一度</button>
+    <button class="btn sub2" id="homeBtn">タイトルへ</button>
+  </div>
+</div>
+<button id="bgmBtn" title="BGM">🎵</button>
+<div id="verTag"></div>
+<script>
+  document.getElementById('verTag').textContent = 'Tsum Pi v25';
+  // ---------------- player identity (Pi build: set by Pi.authenticate below) ----------------
+  let PLAYER = null;
+  const PI_SANDBOX = false;   // testnet app
+  const PINET_URL = '';
+
+  // ---------------- tiny webaudio sounds ----------------
+  let AC = null;
+  function ac() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { } } if (AC && AC.state === 'suspended') AC.resume(); return AC; }
+  function blip(freq, dur, type, gain) {
+    const a = ac(); if (!a) return;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(gain || .12, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, a.currentTime + (dur || .12));
+    o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime + (dur || .12));
+  }
+  function popSound(n) { blip(420 + n * 45, .14, 'triangle', .15); setTimeout(() => blip(630 + n * 45, .12, 'sine', .1), 40); }
+  function clickSound() { blip(880, .06, 'square', .06); }
+
+  // ---------------- amusement-park waltz BGM (original melody, synthesized) ----------------
+  let bgmOn = true;
+  try { bgmOn = localStorage.getItem('tsumBgm') !== 'off'; } catch (e) { }
+  let bgmTimer = null, bgmBeat = 0, bgmNextAt = 0;
+  const BEAT = 0.30;
+  const MEL = [76, 79, 84, 83, 79, 76, 81, 79, 76, 74, 0, 0, 76, 77, 79, 81, 79, 76, 77, 76, 74, 72, 0, 0];
+  const ROOT = [48, 48, 43, 43, 48, 53, 43, 48];
+  const mf = m => 440 * Math.pow(2, (m - 69) / 12);
+  function tone(midi, at, dur, type, vol) {
+    const a = ac(); if (!a) return;
+    const o = a.createOscillator(), o2 = a.createOscillator(), g = a.createGain(), g2 = a.createGain();
+    o.type = type; o.frequency.value = mf(midi);
+    o2.type = 'sine'; o2.frequency.value = mf(midi) * 2; g2.gain.value = .35;
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(vol, at + .015);
+    g.gain.exponentialRampToValueAtTime(.0008, at + dur);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(a.destination);
+    o.start(at); o2.start(at); o.stop(at + dur + .05); o2.stop(at + dur + .05);
+  }
+  function bgmTick() {
+    const a = ac(); if (!a) return;
+    while (bgmNextAt < a.currentTime + 0.18) {
+      const b = bgmBeat, bar = Math.floor(b / 3) % 8, beatInBar = b % 3;
+      const m = MEL[b % 24];
+      if (m) tone(m, bgmNextAt, .34, 'triangle', .05);
+      if (beatInBar === 0) tone(ROOT[bar], bgmNextAt, .5, 'sine', .055);
+      else { tone(ROOT[bar] + 7, bgmNextAt, .2, 'triangle', .018); tone(ROOT[bar] + 12, bgmNextAt, .2, 'triangle', .014); }
+      bgmNextAt += BEAT; bgmBeat++;
+    }
+  }
+  function bgmStart() { if (!bgmOn || bgmTimer) return; const a = ac(); if (!a) return; bgmNextAt = a.currentTime + .06; bgmTimer = setInterval(bgmTick, 90); }
+  function bgmStop() { clearInterval(bgmTimer); bgmTimer = null; }
+  const bgmBtn = document.getElementById('bgmBtn');
+  function bgmUi() { bgmBtn.textContent = bgmOn ? '🎵' : '🔇'; }
+  bgmBtn.addEventListener('click', () => { bgmOn = !bgmOn; try { localStorage.setItem('tsumBgm', bgmOn ? 'on' : 'off'); } catch (e) { } bgmUi(); if (bgmOn) bgmStart(); else bgmStop(); });
+  bgmUi();
+  window.addEventListener('pointerdown', function once() { bgmStart(); window.removeEventListener('pointerdown', once); });
+
+  // ---------------- save data: local + Firestore (best never lowered) ----------------
+  const HEART_MAX = 5, HEART_REGEN_MS = 3 * 60 * 1000; // test setting (was 15 min)
+  let save = { best: 0, coins: 0, hearts: HEART_MAX, heartTs: Date.now() };
+  try { const s = JSON.parse(localStorage.getItem('tsumSaveV1') || 'null'); if (s) save = Object.assign(save, s); } catch (e) { }
+  function regenHearts() {
+    if (save.hearts >= HEART_MAX) { save.heartTs = Date.now(); return; }
+    const add = Math.floor((Date.now() - save.heartTs) / HEART_REGEN_MS);
+    if (add > 0) { save.hearts = Math.min(HEART_MAX, save.hearts + add); save.heartTs += add * HEART_REGEN_MS; if (save.hearts >= HEART_MAX) save.heartTs = Date.now(); }
+  }
+  function persistLocal() { try { localStorage.setItem('tsumSaveV1', JSON.stringify(save)); } catch (e) { } }
+  let fbDb = null, userDoc = null, serverKnown = false;
+  function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+  const FB_CONFIG = {
+    apiKey: "AIzaSyBsIRq3XTsDkIFj4sxzmGS9DgT53b2VMUs",
+    authDomain: "moco-othello-6e5c4.firebaseapp.com",
+    projectId: "moco-othello-6e5c4",
+    databaseURL: "https://moco-othello-6e5c4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    storageBucket: "moco-othello-6e5c4.firebasestorage.app",
+    messagingSenderId: "276791873988",
+    appId: "1:276791873988:web:38b42f081c22e6361c5491"
+  };
+  function startSync() {
+    if (!PLAYER) return;
+    loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js')
+      .then(() => loadScript('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'))
+      .then(() => {
+        firebase.initializeApp(FB_CONFIG);
+        fbDb = firebase.firestore();
+        userDoc = fbDb.collection('tsumUsers').doc(PLAYER.id);
+        return userDoc.get();
+      })
+      .then(snap => {
+        serverKnown = true;
+        if (snap && snap.exists) {
+          const d = snap.data();
+          save.best = Math.max(save.best, d.best || 0);
+          if ((d.updated || 0) > (save.updated || 0)) { save.coins = d.coins || 0; save.hearts = (d.hearts != null ? d.hearts : save.hearts); save.heartTs = d.heartTs || save.heartTs; }
+          save.updated = Math.max(save.updated || 0, d.updated || 0);
+          regenHearts(); persistLocal(); renderTitle();
+        }
+        checkInbox();
+      })
+      .catch(() => { /* offline or rules: local save still works */ });
+  }
+  function persistServer() {
+    persistLocal();
+    if (!userDoc) return;
+    const payload = { name: PLAYER.name, best: save.best, coins: save.coins, hearts: save.hearts, heartTs: save.heartTs, updated: Date.now() };
+    save.updated = payload.updated;
+    fbDb.runTransaction(tx => tx.get(userDoc).then(snap => {
+      const cur = snap.exists ? snap.data() : {};
+      payload.best = Math.max(payload.best, cur.best || 0);
+      tx.set(userDoc, payload);
+    })).catch(() => { });
+  }
+
+  // ---------------- heart gifts ----------------
+  const GIFTS_ENABLED = true; // Pi build: true (recipient lookup needs Pi usernames)
+  const GIFT_COIN_BONUS = 200, GIFT_DAILY_MAX = 5;
+  let inbox = [];
+  function giftMsg(t) { document.getElementById('giftMsg').textContent = t; }
+  function checkInbox() {
+    if (!GIFTS_ENABLED || !fbDb || !PLAYER) return;
+    fbDb.collection('tsumGifts').where('toId', '==', PLAYER.id).where('claimed', '==', false).get()
+      .then(qs => {
+        inbox = qs.docs.map(d => ({ ref: d.ref, from: (d.data() || {}).fromName || '?' }));
+        const iv = document.getElementById('inboxVal');
+        iv.textContent = inbox.length ? 'ハート ' + inbox.length + ' 件' : 'なし';
+        document.getElementById('claimBtn').style.display = inbox.length ? '' : 'none';
+      })
+      .catch(() => { document.getElementById('inboxVal').textContent = '―'; });
+  }
+  function claimGifts() {
+    if (!inbox.length) return;
+    const names = [...new Set(inbox.map(g => g.from))].join('、');
+    const n = inbox.length;
+    const batch = fbDb.batch();
+    inbox.forEach(g => batch.update(g.ref, { claimed: true, claimedAt: Date.now() }));
+    batch.commit().then(() => {
+      save.hearts += n; inbox = []; persistServer(); renderTitle(); checkInbox();
+      giftMsg(names + ' さんからハート' + n + '件を受け取りました');
+      blip(784, .15, 'triangle', .12); setTimeout(() => blip(988, .18, 'triangle', .12), 120);
+    }).catch(() => giftMsg('受け取りに失敗しました。通信を確認してください'));
+  }
+  function giftsLeftToday() {
+    const today = new Date().toDateString();
+    if (save.giftDay !== today) { save.giftDay = today; save.giftCount = 0; }
+    return GIFT_DAILY_MAX - (save.giftCount || 0);
+  }
+  function sendGift() {
+    if (!GIFTS_ENABLED || !fbDb) { giftMsg('ハート送信にはサーバー接続が必要です'); return; }
+    const to = (document.getElementById('giftTo').value || '').trim();
+    if (!to) { giftMsg('相手のPiユーザー名を入れてください'); return; }
+    if (to.toLowerCase() === (PLAYER.name || '').toLowerCase()) { giftMsg('自分には送れません'); return; }
+    if (giftsLeftToday() <= 0) { giftMsg('今日の送信は上限（5回）に達しました'); return; }
+    giftMsg('送信中…');
+    fbDb.collection('tsumUsers').where('name', '==', to).limit(5).get()
+      .then(qs => {
+        const hit = qs.docs.find(d => d.id.indexOf('pi:') === 0);
+        if (!hit) { giftMsg('そのユーザー名はまだ見つかりません（相手が一度プレイすると見つかります）'); return null; }
+        return fbDb.collection('tsumGifts').add({ toId: hit.id, toName: to, fromId: PLAYER.id, fromName: PLAYER.name, ts: Date.now(), claimed: false })
+          .then(() => {
+            save.giftCount = (save.giftCount || 0) + 1;
+            save.coins += GIFT_COIN_BONUS;
+            persistServer(); renderTitle();
+            giftMsg(to + ' さんにハートを送りました（コイン+' + GIFT_COIN_BONUS + '、今日あと' + giftsLeftToday() + '回）');
+            document.getElementById('giftTo').value = '';
+            blip(880, .12, 'triangle', .12);
+          });
+      })
+      .catch(() => giftMsg('送信に失敗しました。通信を確認してください'));
+  }
+  document.getElementById('claimBtn').addEventListener('click', () => { clickSound(); claimGifts(); });
+  document.getElementById('giftBtn').addEventListener('click', () => { clickSound(); sendGift(); });
+  if (!GIFTS_ENABLED) {
+    document.getElementById('giftTo').disabled = true;
+    document.getElementById('giftBtn').disabled = true;
+    giftMsg('ハート送信はPi版で使えます');
+  }
+</script>
+<script>
+  // ---------------- game ----------------
+  const COLS = 9, ROWS = 11, GAME_SEC = 60;
+  const BOMB = 5, FEVER_NEED = 25, FEVER_MS = 10000, BOMB_CHAIN = 7;
+  const TYPES = [
+    { c: ['#ffe3ee', '#ff9ec4'], svg: '<svg viewBox="0 0 100 100"><ellipse cx="31" cy="20" rx="9" ry="19" fill="#ffffff" transform="rotate(-11 31 20)"/><ellipse cx="69" cy="20" rx="9" ry="19" fill="#ffffff" transform="rotate(11 69 20)"/><ellipse cx="31" cy="22" rx="4.4" ry="12" fill="#ffb7d1" transform="rotate(-11 31 22)"/><ellipse cx="69" cy="22" rx="4.4" ry="12" fill="#ffb7d1" transform="rotate(11 69 22)"/><circle cx="50" cy="63" r="29" fill="#ffffff"/><circle cx="39" cy="59" r="3.4" fill="#3a2b33"/><circle cx="61" cy="59" r="3.4" fill="#3a2b33"/><circle cx="40.2" cy="57.8" r="1.2" fill="#ffffff"/><circle cx="62.2" cy="57.8" r="1.2" fill="#ffffff"/><ellipse cx="50" cy="66" rx="4" ry="2.8" fill="#ff7fa5"/><path d="M50 69 q-1 4 -6 4 M50 69 q1 4 6 4" stroke="#d77a97" stroke-width="1.8" fill="none" stroke-linecap="round"/><ellipse cx="30" cy="68" rx="5.6" ry="3.4" fill="#ffc4d6" opacity=".8"/><ellipse cx="70" cy="68" rx="5.6" ry="3.4" fill="#ffc4d6" opacity=".8"/></svg>' },
+    { c: ['#ffedbe', '#ffc94d'], svg: '<svg viewBox="0 0 100 100"><circle cx="25" cy="28" r="11" fill="#a9743f"/><circle cx="75" cy="28" r="11" fill="#a9743f"/><circle cx="25" cy="28" r="5.4" fill="#eac9a0"/><circle cx="75" cy="28" r="5.4" fill="#eac9a0"/><circle cx="50" cy="57" r="32" fill="#bd8650"/><circle cx="38" cy="53" r="3.4" fill="#33241a"/><circle cx="62" cy="53" r="3.4" fill="#33241a"/><circle cx="39.2" cy="51.8" r="1.2" fill="#ffffff"/><circle cx="63.2" cy="51.8" r="1.2" fill="#ffffff"/><ellipse cx="50" cy="67" rx="13" ry="10" fill="#f2dcba"/><ellipse cx="50" cy="62" rx="5.2" ry="3.8" fill="#54371f"/><path d="M50 66 v3 M50 69 q-4 4 -8 2 M50 69 q4 4 8 2" stroke="#54371f" stroke-width="2" fill="none" stroke-linecap="round"/><ellipse cx="29" cy="64" rx="5.6" ry="3.4" fill="#ffab91" opacity=".7"/><ellipse cx="71" cy="64" rx="5.6" ry="3.4" fill="#ffab91" opacity=".7"/></svg>' },
+    { c: ['#dcf7c9', '#8edb74'], svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="58" r="32" fill="#8edb74"/><circle cx="29" cy="33" r="10.5" fill="#8edb74"/><circle cx="71" cy="33" r="10.5" fill="#8edb74"/><circle cx="29" cy="33" r="6.8" fill="#ffffff"/><circle cx="71" cy="33" r="6.8" fill="#ffffff"/><circle cx="29" cy="34" r="3.4" fill="#263238"/><circle cx="71" cy="34" r="3.4" fill="#263238"/><path d="M31 63 Q50 76 69 63" stroke="#2e7d32" stroke-width="2.6" fill="none" stroke-linecap="round"/><ellipse cx="28" cy="62" rx="6" ry="3.6" fill="#ff9eb5" opacity=".8"/><ellipse cx="72" cy="62" rx="6" ry="3.6" fill="#ff9eb5" opacity=".8"/></svg>' },
+    { c: ['#fff6bf', '#ffd43b'], svg: '<svg viewBox="0 0 100 100"><circle cx="50" cy="58" r="31" fill="#ffdf5e"/><path d="M50 28 q-4 -9 -11 -10 M50 28 q0 -10 5 -13 M50 28 q5 -8 11 -9" stroke="#f0a51f" stroke-width="3.4" fill="none" stroke-linecap="round"/><circle cx="38" cy="54" r="3.6" fill="#4a3200"/><circle cx="62" cy="54" r="3.6" fill="#4a3200"/><circle cx="39.3" cy="52.7" r="1.3" fill="#ffffff"/><circle cx="63.3" cy="52.7" r="1.3" fill="#ffffff"/><path d="M41 63 L59 63 L50 73 Z" fill="#ff9f2e"/><ellipse cx="29" cy="65" rx="6" ry="3.6" fill="#ffab91" opacity=".85"/><ellipse cx="71" cy="65" rx="6" ry="3.6" fill="#ffab91" opacity=".85"/></svg>' },
+    { c: ['#dcefff', '#9ec8f5'], svg: '<svg viewBox="0 0 100 100"><circle cx="19" cy="44" r="13" fill="#aebdcf"/><circle cx="81" cy="44" r="13" fill="#aebdcf"/><circle cx="19" cy="44" r="7" fill="#e8eff7"/><circle cx="81" cy="44" r="7" fill="#e8eff7"/><circle cx="50" cy="57" r="31" fill="#ccd9e6"/><circle cx="36" cy="51" r="3.3" fill="#2f3e4d"/><circle cx="64" cy="51" r="3.3" fill="#2f3e4d"/><circle cx="37.2" cy="49.8" r="1.2" fill="#ffffff"/><circle cx="65.2" cy="49.8" r="1.2" fill="#ffffff"/><ellipse cx="50" cy="60" rx="7" ry="10.5" fill="#5f7386"/><ellipse cx="29" cy="65" rx="5.6" ry="3.4" fill="#ffab91" opacity=".7"/><ellipse cx="71" cy="65" rx="5.6" ry="3.4" fill="#ffab91" opacity=".7"/></svg>' },
+    { e: '★', c: ['#e8fdff', '#38b6c9'] }
+  ];
+  const field = document.getElementById('field');
+  const canvas = document.getElementById('chainCanvas');
+  const ctx = canvas.getContext('2d');
+  let cell = 50, grid = [], chain = [], dragging = false, animating = false;
+  let playing = false, score = 0, coinsGain = 0, combo = 0, lastPopAt = 0, timeLeft = GAME_SEC, timerId = null;
+  let feverGauge = 0, feverUntil = 0, bombPending = null;
+  let skillGauge = 0, fanLeft = 3, paused = false;
+  const SKILL_NEED = 15, FAN_MAX = 3;
+  const inFever = () => Date.now() < feverUntil;
+
+  const rndType = () => Math.floor(Math.random() * BOMB); // normal types only (0..4)
+  function stylePiece(p) {
+    const t = TYPES[p.type];
+    p.el.style.background = p.type === BOMB
+      ? 'radial-gradient(circle at 35% 30%, #ffffff, ' + t.c[0] + ' 45%, ' + t.c[1] + ')'
+      : 'radial-gradient(circle at 35% 30%, ' + t.c[0] + ', ' + t.c[1] + ')';
+    if (p.type === BOMB) p.el.firstChild.textContent = '★';
+    p.el.firstChild.style.color = p.type === BOMB ? '#ffffff' : '';
+    p.el.firstChild.style.textShadow = p.type === BOMB ? '0 1px 3px rgba(0,80,100,.5)' : '';
+    p.el.style.boxShadow = p.type === BOMB
+      ? 'inset -3px -5px 0 rgba(0,60,80,.15), 0 0 10px 2px rgba(56,182,201,.55)'
+      : 'inset -3px -5px 0 rgba(0,0,0,.08), 0 2px 3px rgba(120,40,80,.18)';
+  }
+  function makePiece(type) {
+    const el = document.createElement('div');
+    el.className = 'tsum';
+    const f = document.createElement('span');
+    f.className = 'face';
+    f.style.transform = 'rotate(' + Math.floor(Math.random() * 360) + 'deg)';
+    if (TYPES[type].svg) f.innerHTML = TYPES[type].svg; else f.textContent = TYPES[type].e;
+    el.appendChild(f);
+    const p = { type, el, row: 0, col: 0 };
+    stylePiece(p);
+    return p;
+  }
+  function place(p, animate) {
+    const size = cell * (TYPES[p.type].sizeMul || 1.14), off = (cell - size) / 2;
+    p.el.style.width = size + 'px'; p.el.style.height = size + 'px';
+    p.el.firstChild.style.fontSize = (size * 0.56) + 'px';
+    p.el.style.transform = 'translate(' + (p.col * cell + off) + 'px,' + (p.row * cell + off) + 'px)';
+  }
+  function layout() {
+    cell = field.clientWidth / COLS;
+    field.style.height = (cell * ROWS) + 'px';
+    canvas.width = field.clientWidth; canvas.height = cell * ROWS;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (grid[r] && grid[r][c]) place(grid[r][c]);
+    drawChain();
+  }
+  function newBoard() {
+    field.querySelectorAll('.tsum').forEach(el => el.remove());
+    grid = [];
+    for (let r = 0; r < ROWS; r++) { grid.push([]); for (let c = 0; c < COLS; c++) { const p = makePiece(rndType()); p.row = r; p.col = c; grid[r].push(p); field.appendChild(p.el); } }
+    layout();
+  }
+  function pieceAtXY(x, y) {
+    let best = null, bd = 1e9;
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
+      const p = grid[r][c]; if (!p) continue;
+      const d = Math.hypot(x - (c + .5) * cell, y - (r + .5) * cell);
+      if (d < bd) { bd = d; best = p; }
+    }
+    return bd <= cell * 0.78 ? best : null;
+  }
+  function pieceAtEvent(e) {
+    const rect = field.getBoundingClientRect();
+    return pieceAtXY(e.clientX - rect.left, e.clientY - rect.top);
+  }
+  let lastPX = 0, lastPY = 0;
+  function tryExtend(x, y) {
+    const p = pieceAtXY(x, y); if (!p) return;
+    const tail = chain[chain.length - 1];
+    if (p === tail) return;
+    if (chain.length >= 2 && p === chain[chain.length - 2]) { chain.pop(); markSel(); drawChain(); return; }
+    if (p.type !== chain[0].type || chain.includes(p)) return;
+    if (Math.abs(p.row - tail.row) > 1 || Math.abs(p.col - tail.col) > 1) return;
+    chain.push(p); markSel(); drawChain(); blip(500 + chain.length * 30, .05, 'sine', .05);
+  }
+  const center = p => ({ x: (p.col + .5) * cell, y: (p.row + .5) * cell });
+  function drawChain() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (chain.length < 2) return;
+    ctx.beginPath();
+    chain.forEach((p, i) => { const pt = center(p); i ? ctx.lineTo(pt.x, pt.y) : ctx.moveTo(pt.x, pt.y); });
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(64,200,255,.5)'; ctx.lineWidth = cell * .4; ctx.stroke();
+    ctx.strokeStyle = 'rgba(190,245,255,.9)'; ctx.lineWidth = cell * .16; ctx.stroke();
+    chain.forEach(p => {
+      const pt = center(p);
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, cell * .13, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff'; ctx.fill();
+      ctx.beginPath(); ctx.arc(pt.x, pt.y, cell * .2, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(120,230,255,.85)'; ctx.lineWidth = cell * .05; ctx.stroke();
+    });
+  }
+  function markSel() { grid.flat().forEach(p => p.el.classList.toggle('sel', chain.includes(p))); }
+  const dragHand = document.getElementById('dragHand');
+  function moveHand(e) {
+    const r = field.getBoundingClientRect();
+    dragHand.style.left = (e.clientX - r.left - 44) + 'px';
+    dragHand.style.top = (e.clientY - r.top - 3) + 'px';
+  }
+  function clearChain() { chain = []; markSel(); drawChain(); dragHand.style.display = 'none'; }
+  function floatScore(p, text) {
+    const d = document.createElement('div');
+    d.className = 'floatScore'; d.textContent = text;
+    const pt = center(p);
+    d.style.left = (pt.x - 14) + 'px'; d.style.top = (pt.y - 16) + 'px';
+    field.appendChild(d); setTimeout(() => d.remove(), 850);
+  }
+  function updateHud() {
+    document.getElementById('scoreBox').textContent = score.toLocaleString();
+    document.getElementById('coinBox').textContent = '🪙 ' + (save.coins + coinsGain).toLocaleString();
+    document.getElementById('comboBox').textContent = combo > 1 ? combo + ' コンボ!' : '';
+  }
+  function addFever(n) {
+    if (inFever()) return;
+    feverGauge = Math.min(FEVER_NEED, feverGauge + n);
+    if (feverGauge >= FEVER_NEED) {
+      feverUntil = Date.now() + FEVER_MS;
+      field.classList.add('fever');
+      const mid = grid[Math.floor(ROWS / 2)] && grid[Math.floor(ROWS / 2)][Math.floor(COLS / 2)];
+      if (mid) floatScore(mid, 'FEVER!');
+      blip(784, .12, 'triangle', .13); setTimeout(() => blip(988, .12, 'triangle', .13), 90); setTimeout(() => blip(1175, .2, 'triangle', .13), 180);
+    }
+  }
+  function settle() {
+    const spawned = [];
+    for (let c = 0; c < COLS; c++) {
+      const surv = [];
+      for (let r = ROWS - 1; r >= 0; r--) if (grid[r][c]) surv.push(grid[r][c]);
+      let write = ROWS - 1;
+      surv.forEach(p => { grid[write][c] = p; p.row = write; p.col = c; write--; });
+      for (let r = write; r >= 0; r--) { const p = makePiece(rndType()); p.row = r; p.col = c; p.el.classList.add('spawn'); grid[r][c] = p; field.appendChild(p.el); spawned.push(p); }
+      for (let r = 0; r < ROWS; r++) place(grid[r][c]);
+    }
+    if (bombPending !== null) {
+      const cand = spawned.filter(p => p.col === bombPending);
+      const t = (cand.length ? cand : spawned)[0];
+      if (t) { t.type = BOMB; stylePiece(t); place(t); }
+      bombPending = null;
+    }
+    animating = false;
+  }
+  function removePieces(popped) {
+    animating = true;
+    popped.forEach(p => { p.el.classList.add('pop'); p.el.style.transform += ' scale(.2)'; if (grid[p.row][p.col] === p) grid[p.row][p.col] = null; });
+    setTimeout(() => { popped.forEach(p => p.el.remove()); settle(); }, 150);
+  }
+  function popChain() {
+    const n = chain.length, tail = chain[n - 1];
+    const now = Date.now();
+    combo = (now - lastPopAt <= 2500) ? combo + 1 : 1;
+    lastPopAt = now;
+    const mult = Math.min(3, 1 + (combo - 1) * 0.2) * (inFever() ? 2 : 1);
+    const gain = Math.round((n * 10 + (n - 3) * (n - 3) * 5) * mult);
+    score += gain; coinsGain += n;
+    updateHud();
+    floatScore(tail, '+' + gain);
+    popSound(n);
+    if (n >= BOMB_CHAIN && bombPending === null) bombPending = tail.col;
+    addFever(n);
+    chargeSkill(chain);
+    const popped = chain.slice();
+    clearChain();
+    removePieces(popped);
+  }
+  function chargeSkill(popped) {
+    const y = popped.filter(p => p.type === 0).length;
+    if (y) { skillGauge = Math.min(SKILL_NEED, skillGauge + y); skillUi(); }
+  }
+  function scorePop(popped, origin) {
+    const now = Date.now();
+    combo = (now - lastPopAt <= 2500) ? combo + 1 : 1;
+    lastPopAt = now;
+    const mult = Math.min(3, 1 + (combo - 1) * 0.2) * (inFever() ? 2 : 1);
+    const gain = Math.round(popped.length * 10 * mult);
+    score += gain; coinsGain += popped.length;
+    updateHud();
+    floatScore(origin, '+' + gain);
+    addFever(popped.length);
+    chargeSkill(popped);
+    removePieces(popped);
+  }
+  function expandBombs(hit) {
+    const queue = [...hit.keys()].filter(p => p.type === BOMB);
+    while (queue.length) {
+      const cur = queue.pop();
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+        const r = cur.row + dr, c = cur.col + dc;
+        if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
+        const p = grid[r][c];
+        if (p && !hit.has(p)) { hit.set(p, true); if (p.type === BOMB) queue.push(p); }
+      }
+    }
+    return [...hit.keys()];
+  }
+  function explodeBomb(b) {
+    if (animating || paused) return;
+    const hit = new Map([[b, true]]);
+    const popped = expandBombs(hit);
+    blip(180, .25, 'sawtooth', .16); popSound(popped.length);
+    scorePop(popped, b);
+  }
+  function skillUi() {
+    const btn = document.getElementById('skillBtn');
+    const deg = Math.round(skillGauge / SKILL_NEED * 360);
+    btn.style.background = 'conic-gradient(#ffd93b ' + deg + 'deg, #fff8e1 ' + deg + 'deg)';
+    btn.classList.toggle('ready', skillGauge >= SKILL_NEED);
+    btn.disabled = !(playing && !paused && skillGauge >= SKILL_NEED);
+  }
+  function fireSkill() {
+    if (!playing || paused || animating || skillGauge < SKILL_NEED) return;
+    skillGauge = 0; skillUi();
+    const cr = 2 + Math.floor(Math.random() * (ROWS - 4)), cc = 2 + Math.floor(Math.random() * (COLS - 4));
+    const hit = new Map();
+    for (let dr = -2; dr <= 2; dr++) for (let dc = -2; dc <= 2; dc++) {
+      if (dr * dr + dc * dc > 5) continue;
+      const p = grid[cr + dr] && grid[cr + dr][cc + dc];
+      if (p) hit.set(p, true);
+    }
+    const popped = expandBombs(hit);
+    blip(240, .3, 'sawtooth', .15); popSound(popped.length);
+    scorePop(popped, grid[cr][cc] || popped[0]);
+  }
+  function fanUi() {
+    document.getElementById('fanCnt').textContent = fanLeft;
+    document.getElementById('fanBtn').disabled = !(playing && !paused && fanLeft > 0);
+  }
+  function useFan() {
+    if (!playing || paused || animating || fanLeft <= 0) return;
+    fanLeft--; fanUi();
+    const pieces = grid.flat().filter(p => p && p.type !== BOMB);
+    const types = pieces.map(p => p.type);
+    for (let i = types.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [types[i], types[j]] = [types[j], types[i]]; }
+    pieces.forEach((p, i) => { p.type = types[i]; stylePiece(p); p.el.firstChild.style.transform = 'rotate(' + Math.floor(Math.random() * 360) + 'deg)'; });
+    blip(500, .15, 'sine', .1); setTimeout(() => blip(700, .15, 'sine', .1), 80);
+  }
+  document.getElementById('skillBtn').addEventListener('click', () => { clickSound(); fireSkill(); });
+  document.getElementById('fanBtn').addEventListener('click', () => { clickSound(); useFan(); });
+  document.getElementById('skillIn').innerHTML = TYPES[0].svg;
+  field.addEventListener('pointerdown', e => {
+    if (!playing || animating || paused) return;
+    ac();
+    const p = pieceAtEvent(e); if (!p) return;
+    if (p.type === BOMB) { explodeBomb(p); e.preventDefault(); return; }
+    dragging = true; chain = [p]; markSel(); drawChain();
+    { const rect = field.getBoundingClientRect(); lastPX = e.clientX - rect.left; lastPY = e.clientY - rect.top; }
+    dragHand.style.display = 'block'; moveHand(e);
+    try { field.setPointerCapture(e.pointerId); } catch (err) { }
+    e.preventDefault();
+  });
+  field.addEventListener('pointermove', e => {
+    if (!dragging || !chain.length) return;
+    moveHand(e);
+    const rect = field.getBoundingClientRect();
+    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    const dist = Math.hypot(x - lastPX, y - lastPY);
+    const steps = Math.max(1, Math.min(24, Math.floor(dist / (cell * 0.3))));
+    for (let i = 1; i <= steps; i++) tryExtend(lastPX + (x - lastPX) * i / steps, lastPY + (y - lastPY) * i / steps);
+    lastPX = x; lastPY = y;
+  });
+  function endDrag() { if (!dragging) return; dragging = false; if (chain.length >= 3) popChain(); else clearChain(); }
+  field.addEventListener('pointerup', endDrag);
+  field.addEventListener('pointercancel', endDrag);
+
+  function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.toggle('on', s.id === id)); }
+  function renderTitle() {
+    regenHearts();
+    document.getElementById('hearts').textContent = save.hearts > HEART_MAX
+      ? '♥'.repeat(HEART_MAX) + '+' + (save.hearts - HEART_MAX)
+      : '♥'.repeat(save.hearts) + '♡'.repeat(HEART_MAX - save.hearts);
+    const info = document.getElementById('heartInfo');
+    if (save.hearts < HEART_MAX) {
+      const ms = Math.max(0, save.heartTs + HEART_REGEN_MS - Date.now());
+      info.textContent = 'あと' + Math.floor(ms / 60000) + ':' + String(Math.floor(ms % 60000 / 1000)).padStart(2, '0') + 'で回復';
+    } else info.textContent = '';
+    document.getElementById('bestVal').textContent = save.best.toLocaleString();
+    document.getElementById('coinVal').textContent = save.coins.toLocaleString();
+    document.getElementById('startBtn').disabled = save.hearts < 1;
+  }
+  function startGame() {
+    regenHearts();
+    if (save.hearts < 1) { renderTitle(); return; }
+    if (save.hearts >= HEART_MAX) save.heartTs = Date.now();
+    save.hearts--; persistServer();
+    score = 0; coinsGain = 0; combo = 0; lastPopAt = 0; timeLeft = GAME_SEC;
+    feverGauge = 0; feverUntil = 0; bombPending = null; field.classList.remove('fever');
+    skillGauge = 0; fanLeft = FAN_MAX; paused = false;
+    document.getElementById('pauseOverlay').classList.remove('on');
+    document.getElementById('pauseBtn').textContent = '⏸';
+    updateHud(); skillUi(); fanUi();
+    document.getElementById('result').classList.remove('on');
+    document.body.classList.add('inGame');
+    showScreen('gameScreen');
+    playing = true;
+    newBoard();
+    clearInterval(timerId);
+    timerId = setInterval(tick, 100);
+    blip(660, .1, 'triangle', .1); setTimeout(() => blip(880, .12, 'triangle', .1), 90);
+  }
+  function tick() {
+    timeLeft = Math.max(0, timeLeft - 0.1);
+    document.getElementById('timeSec').textContent = Math.ceil(timeLeft);
+    const bar = document.getElementById('timeBar');
+    bar.style.width = (timeLeft / GAME_SEC * 100) + '%';
+    bar.classList.toggle('low', timeLeft <= 10);
+    if (!inFever() && feverUntil !== 0) { feverGauge = 0; feverUntil = 0; field.classList.remove('fever'); }
+    const fb = document.getElementById('feverBar');
+    if (inFever()) { fb.style.width = Math.max(0, (feverUntil - Date.now()) / FEVER_MS * 100) + '%'; fb.classList.add('hot'); }
+    else { fb.style.width = (feverGauge / FEVER_NEED * 100) + '%'; fb.classList.remove('hot'); }
+    if (timeLeft <= 0) endGame();
+  }
+  function togglePause() {
+    if (!playing) return;
+    paused = !paused;
+    document.getElementById('pauseOverlay').classList.toggle('on', paused);
+    document.getElementById('pauseBtn').textContent = paused ? '▶' : '⏸';
+    if (paused) { clearInterval(timerId); clearChain(); dragging = false; }
+    else { clearInterval(timerId); timerId = setInterval(tick, 100); }
+    skillUi(); fanUi();
+  }
+  document.getElementById('pauseBtn').addEventListener('click', () => { clickSound(); togglePause(); });
+  function endGame() {
+    playing = false; clearInterval(timerId); clearChain(); field.classList.remove('fever');
+    paused = false; document.getElementById('pauseOverlay').classList.remove('on'); skillUi(); fanUi();
+    const isBest = score > save.best;
+    if (isBest) save.best = score;
+    save.coins += coinsGain;
+    persistServer();
+    document.getElementById('finalScore').textContent = score.toLocaleString();
+    document.getElementById('coinGain').textContent = coinsGain.toLocaleString();
+    document.getElementById('bestVal2').textContent = save.best.toLocaleString();
+    document.getElementById('newBest').style.display = isBest ? '' : 'none';
+    document.getElementById('result').classList.add('on');
+    blip(523, .15, 'triangle', .12); setTimeout(() => blip(659, .15, 'triangle', .12), 130); setTimeout(() => blip(784, .22, 'triangle', .12), 260);
+  }
+  document.getElementById('startBtn').addEventListener('click', () => { clickSound(); startGame(); });
+  document.getElementById('againBtn').addEventListener('click', () => { clickSound(); startGame(); if (!playing) { document.getElementById('result').classList.remove('on'); document.body.classList.remove('inGame'); showScreen('titleScreen'); renderTitle(); } });
+  document.getElementById('homeBtn').addEventListener('click', () => { clickSound(); document.getElementById('result').classList.remove('on'); document.body.classList.remove('inGame'); showScreen('titleScreen'); renderTitle(); });
+  window.addEventListener('resize', () => { if (grid.length) layout(); });
+  document.getElementById('userLine').textContent = PLAYER ? ('プレイヤー： ' + PLAYER.name) : 'サインイン中…';
+  renderTitle();
+  setInterval(() => { if (document.getElementById('titleScreen').classList.contains('on')) renderTitle(); }, 1000);
+  startSync();
+  // test hooks
+  window.__tsum = {
+    start: startGame,
+    state: () => ({ score, coinsGain, playing, hearts: save.hearts, pieces: document.querySelectorAll('.tsum').length, fever: inFever(), gauge: feverGauge, bombs: grid.flat().filter(p => p && p.type === BOMB).length, bgm: !!bgmTimer }),
+    grid: () => grid.map(r => r.map(p => p.type)),
+    bombAt: () => { for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (grid[r][c] && grid[r][c].type === BOMB) return [r, c]; return null; },
+    setGauge: v => { feverGauge = v; },
+    skill: () => ({ gauge: skillGauge, fan: fanLeft, paused }),
+    setSkill: v => { skillGauge = v; skillUi(); },
+    fireSkill, useFan, togglePause,
+    center: (r, c) => { const rect = field.getBoundingClientRect(); return { x: rect.left + (c + .5) * cell, y: rect.top + (r + .5) * cell }; }
+  };
+</script>
+
+<style>
+  #pi-gate { position: fixed; inset: 0; z-index: 60; background: rgba(8,28,58,.94); color: #fff;
+             display: none; flex-direction: column; align-items: center; justify-content: center;
+             gap: 16px; padding: 24px; text-align: center; font-family: inherit; }
+  #pi-gate a { color: #cfe8ff; font-weight: 700; }
+</style>
 <div id="pi-gate">
   <p>このブラウザではサインインできません。<br>Piブラウザで開いてください。</p>
   <a id="pinetLink" href="#" style="display:none">PiNetで開く</a>
 </div>
-<div id="verTag"></div>
 <script>
-  // ---- project config ----
-  const PI_SANDBOX = false;   // testnet app -> true, mainnet app -> false
-  const PINET_URL = '';       // set after App Studio registration
-  // ------------------------
-  const colors = ['#ffd54f', '#ff8aab', '#81d4fa', '#a5d6a7', '#ce93d8', '#ffab91'];
-  const board = document.getElementById('board');
-  for (let i = 0; i < 36; i++) {
-    const s = document.createElement('span');
-    s.style.background = colors[(i * 7 + ((i / 6) | 0) * 3) % colors.length];
-    board.appendChild(s);
-  }
-  document.getElementById('verTag').textContent = 'Tsum Pi v1';
-
-  const gate = document.getElementById('pi-gate');
-  const link = document.getElementById('pinetLink');
-  if (PINET_URL) { link.href = PINET_URL; link.style.display = ''; }
-  function showGate() { gate.style.display = 'flex'; }
-
+  const gateEl = document.getElementById('pi-gate');
+  const pinetLink = document.getElementById('pinetLink');
+  if (PINET_URL) { pinetLink.href = PINET_URL; pinetLink.style.display = ''; }
+  function showGate() { gateEl.style.display = 'flex'; }
   if (typeof Pi === 'undefined') {
     showGate();
   } else {
@@ -80,8 +763,10 @@
       Pi.init({ version: '2.0', sandbox: PI_SANDBOX });
       Pi.authenticate(['username'], function (payment) { /* no payments in this app */ })
         .then(function (auth) {
-          document.getElementById('userLine').textContent =
-            'サインイン済み： ' + (auth.user && auth.user.username ? auth.user.username : '');
+          PLAYER = { id: 'pi:' + auth.user.uid, name: auth.user.username };
+          document.getElementById('userLine').textContent = 'サインイン済み： ' + PLAYER.name;
+          renderTitle();
+          startSync();
         })
         .catch(function () { showGate(); });
     } catch (e) { showGate(); }
